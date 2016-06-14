@@ -144,6 +144,9 @@ public interface HttpProxyServerBootstrap {
     HttpProxyServerBootstrap withProxyAuthenticator(
             ProxyAuthenticator proxyAuthenticator);
 
+    HttpProxyServerBootstrap withProxyValve(
+    		ProxyValve proxyValve);
+    
     /**
      * <p>
      * Specify a {@link ChainedProxyManager} to use for chaining requests to

@@ -30,7 +30,9 @@ import org.littleshoot.proxy.FullFlowContext;
 import org.littleshoot.proxy.HttpFilters;
 import org.littleshoot.proxy.HttpFiltersAdapter;
 import org.littleshoot.proxy.ProxyAuthenticator;
+import org.littleshoot.proxy.ProxyValve;
 import org.littleshoot.proxy.SslEngineSource;
+import org.littleshoot.proxy.UserPrincipal;
 
 import javax.net.ssl.SSLSession;
 import java.io.IOException;
@@ -42,6 +44,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -133,6 +136,8 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
     private volatile boolean mitming = false;
 
     private AtomicBoolean authenticated = new AtomicBoolean();
+    
+    private UserPrincipal principal = UserPrincipal.ANONYMOUS;
 
     private final GlobalTrafficShapingHandler globalTrafficShapingHandler;
 
@@ -140,6 +145,8 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
      * The current HTTP request that this connection is currently servicing.
      */
     private volatile HttpRequest currentRequest;
+    
+    private volatile String requestId;
 
     ClientToProxyConnection(
             final DefaultHttpProxyServer proxyServer,
@@ -181,6 +188,12 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
     @Override
     protected ConnectionState readHTTPInitial(HttpRequest httpRequest) {
         LOG.debug("Got request: {}", httpRequest);
+        this.requestId = UUID.randomUUID().toString();
+        
+        final ProxyValve valve = proxyServer.getProxyValve();
+        if (valve != null) {
+        	valve.filterRequest(requestId, principal, httpRequest);
+        }
 
         boolean authenticationRequired = authenticationRequired(httpRequest);
 
@@ -412,9 +425,17 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
     void respond(ProxyToServerConnection serverConnection, HttpFilters filters,
             HttpRequest currentHttpRequest, HttpResponse currentHttpResponse,
             HttpObject httpObject) {
+    	
+    	final ProxyValve valve = proxyServer.getProxyValve();
+        if (valve != null) {
+        	valve.filterResponse(requestId, principal, currentHttpResponse);
+        }
+        
+        this.requestId = null;
+    	
         // we are sending a response to the client, so we are done handling this request
         this.currentRequest = null;
-
+        
         httpObject = filters.serverToProxyResponse(httpObject);
         if (httpObject == null) {
             forceDisconnect(serverConnection);
@@ -935,7 +956,6 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
      * @return
      */
     private boolean authenticationRequired(HttpRequest request) {
-
         if (authenticated.get()) {
             return false;
         }
@@ -961,7 +981,9 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
         
         String userName = StringUtils.substringBefore(decodedString, ":");
         String password = StringUtils.substringAfter(decodedString, ":");
-        if (!authenticator.authenticate(userName, password)) {
+        
+        UserPrincipal userPrincipal = new UserPrincipal(userName, password);
+        if (!authenticator.authenticate(userPrincipal, request)) {
             writeAuthenticationRequired(authenticator.getRealm());
             return true;
         }
@@ -973,6 +995,7 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
         LOG.debug(authentication);
         request.headers().remove(HttpHeaders.Names.PROXY_AUTHORIZATION);
         authenticated.set(true);
+        principal = userPrincipal;
         return false;
     }
 
@@ -1485,6 +1508,10 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
         } else {
             return new FlowContext(this);
         }
+    }
+    
+    protected UserPrincipal getUserPrincipal() {
+    	return principal;
     }
 
 }

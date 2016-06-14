@@ -69,7 +69,7 @@ public abstract class BaseChainedProxyTest extends BaseProxyTest {
     protected ChainedProxyManager chainedProxyManager() {
         return new ChainedProxyManager() {
             @Override
-            public void lookupChainedProxies(HttpRequest httpRequest,
+            public void lookupChainedProxies(UserPrincipal principal, HttpRequest httpRequest,
                     Queue<ChainedProxy> chainedProxies) {
                 chainedProxies.add(newChainedProxy());
             }

@@ -26,7 +26,7 @@ public class ChainedProxyWithFallbackToDirectDueToSSLTest extends
     protected ChainedProxyManager chainedProxyManager() {
         return new ChainedProxyManager() {
             @Override
-            public void lookupChainedProxies(HttpRequest httpRequest,
+            public void lookupChainedProxies(UserPrincipal principal, HttpRequest httpRequest,
                     Queue<ChainedProxy> chainedProxies) {
                 // This first one has a bad cert
                 chainedProxies.add(newChainedProxy());
