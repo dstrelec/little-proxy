@@ -162,7 +162,7 @@ public class ProxyToServerConnection extends ProxyConnection<HttpResponse> {
         ChainedProxyManager chainedProxyManager = proxyServer
                 .getChainProxyManager();
         if (chainedProxyManager != null) {
-            chainedProxyManager.lookupChainedProxies(clientConnection.getUserPrincipal(), initialHttpRequest,
+            chainedProxyManager.lookupChainedProxies(clientConnection.getRequestId(), clientConnection.getUserPrincipal(), initialHttpRequest,
                     chainedProxies);
             if (chainedProxies.size() == 0) {
                 // ChainedProxyManager returned no proxies, can't connect

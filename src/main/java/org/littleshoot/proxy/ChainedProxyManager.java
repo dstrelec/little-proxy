@@ -33,6 +33,6 @@ public interface ChainedProxyManager {
      * @param httpRequest
      * @param chainedProxies
      */
-    void lookupChainedProxies(UserPrincipal principal, HttpRequest httpRequest,
+    void lookupChainedProxies(String requestId, UserPrincipal principal, HttpRequest httpRequest,
             Queue<ChainedProxy> chainedProxies);
 }

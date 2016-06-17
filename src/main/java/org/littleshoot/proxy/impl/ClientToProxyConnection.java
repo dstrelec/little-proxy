@@ -1510,6 +1510,10 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
         }
     }
     
+    protected String getRequestId() {
+    	return requestId;
+    }
+    
     protected UserPrincipal getUserPrincipal() {
     	return principal;
     }
