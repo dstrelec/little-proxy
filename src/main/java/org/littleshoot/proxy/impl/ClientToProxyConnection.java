@@ -30,7 +30,6 @@ import org.littleshoot.proxy.FullFlowContext;
 import org.littleshoot.proxy.HttpFilters;
 import org.littleshoot.proxy.HttpFiltersAdapter;
 import org.littleshoot.proxy.ProxyAuthenticator;
-import org.littleshoot.proxy.ProxyValve;
 import org.littleshoot.proxy.SslEngineSource;
 import org.littleshoot.proxy.UserPrincipal;
 
@@ -44,7 +43,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -145,8 +143,6 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
      * The current HTTP request that this connection is currently servicing.
      */
     private volatile HttpRequest currentRequest;
-    
-    private volatile String requestId;
 
     ClientToProxyConnection(
             final DefaultHttpProxyServer proxyServer,
@@ -188,12 +184,7 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
     @Override
     protected ConnectionState readHTTPInitial(HttpRequest httpRequest) {
         LOG.debug("Got request: {}", httpRequest);
-        this.requestId = UUID.randomUUID().toString();
         
-        final ProxyValve valve = proxyServer.getProxyValve();
-        if (valve != null) {
-        	valve.filterRequest(requestId, principal, httpRequest);
-        }
 
         boolean authenticationRequired = authenticationRequired(httpRequest);
 
@@ -425,13 +416,6 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
     void respond(ProxyToServerConnection serverConnection, HttpFilters filters,
             HttpRequest currentHttpRequest, HttpResponse currentHttpResponse,
             HttpObject httpObject) {
-    	
-    	final ProxyValve valve = proxyServer.getProxyValve();
-        if (valve != null) {
-        	valve.filterResponse(requestId, principal, currentHttpResponse);
-        }
-        
-        this.requestId = null;
     	
         // we are sending a response to the client, so we are done handling this request
         this.currentRequest = null;
@@ -984,6 +968,7 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
         
         UserPrincipal userPrincipal = new UserPrincipal(userName, password);
         if (!authenticator.authenticate(userPrincipal, request)) {
+        	recordClientAuthorizationFailed();
             writeAuthenticationRequired(authenticator.getRealm());
             return true;
         }
@@ -996,6 +981,7 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
         request.headers().remove(HttpHeaders.Names.PROXY_AUTHORIZATION);
         authenticated.set(true);
         principal = userPrincipal;
+        recordClientAuthorized();
         return false;
     }
 
@@ -1481,6 +1467,28 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
             LOG.error("Unable to recorClientSSLHandshakeSucceeded", e);
         }
     }
+    
+    private void recordClientAuthorized() {
+        try {
+            InetSocketAddress clientAddress = getClientAddress();
+            for (ActivityTracker tracker : proxyServer.getActivityTrackers()) {
+                tracker.clientAuthorized(clientAddress, principal);
+            }
+        } catch (Exception e) {
+            LOG.error("Unable to recordClientAuthorized", e);
+        }
+    }
+    
+    private void recordClientAuthorizationFailed() {
+        try {
+            InetSocketAddress clientAddress = getClientAddress();
+            for (ActivityTracker tracker : proxyServer.getActivityTrackers()) {
+                tracker.clientAuthorizationFailed(clientAddress);
+            }
+        } catch (Exception e) {
+            LOG.error("Unable to recordClientAuthorized", e);
+        }
+    }
 
     private void recordClientDisconnected() {
         try {
@@ -1508,10 +1516,6 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
         } else {
             return new FlowContext(this);
         }
-    }
-    
-    protected String getRequestId() {
-    	return requestId;
     }
     
     protected UserPrincipal getUserPrincipal() {

@@ -66,4 +66,16 @@ public class ActivityTrackerAdapter implements ActivityTracker {
             SSLSession sslSession) {
     }
 
+	@Override
+	public void clientAuthorized(InetSocketAddress clientAddress, UserPrincipal principal) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void clientAuthorizationFailed(InetSocketAddress clientAddress) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

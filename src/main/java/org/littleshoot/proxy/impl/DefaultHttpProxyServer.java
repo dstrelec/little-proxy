@@ -29,7 +29,6 @@ import org.littleshoot.proxy.HttpProxyServer;
 import org.littleshoot.proxy.HttpProxyServerBootstrap;
 import org.littleshoot.proxy.MitmManager;
 import org.littleshoot.proxy.ProxyAuthenticator;
-import org.littleshoot.proxy.ProxyValve;
 import org.littleshoot.proxy.SslEngineSource;
 import org.littleshoot.proxy.TransportProtocol;
 import org.littleshoot.proxy.UnknownTransportProtocolException;
@@ -103,7 +102,6 @@ public class DefaultHttpProxyServer implements HttpProxyServer {
     private final SslEngineSource sslEngineSource;
     private final boolean authenticateSslClients;
     private final ProxyAuthenticator proxyAuthenticator;
-    private final ProxyValve proxyValve;
     private final ChainedProxyManager chainProxyManager;
     private final MitmManager mitmManager;
     private final HttpFiltersSource filtersSource;
@@ -231,7 +229,6 @@ public class DefaultHttpProxyServer implements HttpProxyServer {
             SslEngineSource sslEngineSource,
             boolean authenticateSslClients,
             ProxyAuthenticator proxyAuthenticator,
-            ProxyValve proxyValve,
             ChainedProxyManager chainProxyManager,
             MitmManager mitmManager,
             HttpFiltersSource filtersSource,
@@ -250,7 +247,6 @@ public class DefaultHttpProxyServer implements HttpProxyServer {
         this.sslEngineSource = sslEngineSource;
         this.authenticateSslClients = authenticateSslClients;
         this.proxyAuthenticator = proxyAuthenticator;
-        this.proxyValve = proxyValve;
         this.chainProxyManager = chainProxyManager;
         this.mitmManager = mitmManager;
         this.filtersSource = filtersSource;
@@ -365,7 +361,6 @@ public class DefaultHttpProxyServer implements HttpProxyServer {
                     sslEngineSource,
                     authenticateSslClients,
                     proxyAuthenticator,
-                    proxyValve,
                     chainProxyManager,
                     mitmManager,
                     filtersSource,
@@ -545,10 +540,6 @@ public class DefaultHttpProxyServer implements HttpProxyServer {
     protected ProxyAuthenticator getProxyAuthenticator() {
         return proxyAuthenticator;
     }
-    
-    protected ProxyValve getProxyValve() {
-    	return proxyValve;
-    }
 
     public HttpFiltersSource getFiltersSource() {
         return filtersSource;
@@ -578,7 +569,6 @@ public class DefaultHttpProxyServer implements HttpProxyServer {
         private SslEngineSource sslEngineSource = null;
         private boolean authenticateSslClients = true;
         private ProxyAuthenticator proxyAuthenticator = null;
-        private ProxyValve proxyValve = null;
         private ChainedProxyManager chainProxyManager = null;
         private MitmManager mitmManager = null;
         private HttpFiltersSource filtersSource = new HttpFiltersSourceAdapter();
@@ -605,7 +595,6 @@ public class DefaultHttpProxyServer implements HttpProxyServer {
                 SslEngineSource sslEngineSource,
                 boolean authenticateSslClients,
                 ProxyAuthenticator proxyAuthenticator,
-                ProxyValve proxyValve,
                 ChainedProxyManager chainProxyManager,
                 MitmManager mitmManager,
                 HttpFiltersSource filtersSource,
@@ -623,7 +612,6 @@ public class DefaultHttpProxyServer implements HttpProxyServer {
             this.sslEngineSource = sslEngineSource;
             this.authenticateSslClients = authenticateSslClients;
             this.proxyAuthenticator = proxyAuthenticator;
-            this.proxyValve = proxyValve;
             this.chainProxyManager = chainProxyManager;
             this.mitmManager = mitmManager;
             this.filtersSource = filtersSource;
@@ -726,13 +714,6 @@ public class DefaultHttpProxyServer implements HttpProxyServer {
         public HttpProxyServerBootstrap withProxyAuthenticator(
                 ProxyAuthenticator proxyAuthenticator) {
             this.proxyAuthenticator = proxyAuthenticator;
-            return this;
-        }
-        
-        @Override
-        public HttpProxyServerBootstrap withProxyValve(
-                ProxyValve proxyValve) {
-            this.proxyValve = proxyValve;
             return this;
         }
 
@@ -840,7 +821,7 @@ public class DefaultHttpProxyServer implements HttpProxyServer {
             return new DefaultHttpProxyServer(serverGroup,
                     transportProtocol, determineListenAddress(),
                     sslEngineSource, authenticateSslClients,
-                    proxyAuthenticator, proxyValve, chainProxyManager, mitmManager,
+                    proxyAuthenticator, chainProxyManager, mitmManager,
                     filtersSource, transparent,
                     idleConnectionTimeout, activityTrackers, connectTimeout,
                     serverResolver, readThrottleBytesPerSecond, writeThrottleBytesPerSecond,

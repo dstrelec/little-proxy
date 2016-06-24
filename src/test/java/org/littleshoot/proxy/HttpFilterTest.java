@@ -552,7 +552,7 @@ public class HttpFilterTest {
                 .withFiltersSource(filtersSource)
                 .withChainProxyManager(new ChainedProxyManager() {
                     @Override
-                    public void lookupChainedProxies(String requestId, UserPrincipal principal, HttpRequest httpRequest, Queue<ChainedProxy> chainedProxies) {
+                    public void lookupChainedProxies(UserPrincipal principal, HttpRequest httpRequest, Queue<ChainedProxy> chainedProxies) {
                         chainedProxies.add(new ChainedProxyAdapter() {
                             @Override
                             public InetSocketAddress getChainedProxyAddress() {
@@ -620,7 +620,7 @@ public class HttpFilterTest {
                 .withFiltersSource(filtersSource)
                 .withChainProxyManager(new ChainedProxyManager() {
                     @Override
-                    public void lookupChainedProxies(String requestId, UserPrincipal principal, HttpRequest httpRequest, Queue<ChainedProxy> chainedProxies) {
+                    public void lookupChainedProxies(UserPrincipal principal, HttpRequest httpRequest, Queue<ChainedProxy> chainedProxies) {
                         chainedProxies.add(new ChainedProxyAdapter() {
                             @Override
                             public InetSocketAddress getChainedProxyAddress() {

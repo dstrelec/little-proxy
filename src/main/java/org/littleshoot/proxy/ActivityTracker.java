@@ -35,6 +35,19 @@ public interface ActivityTracker {
             SSLSession sslSession);
 
     /**
+     * Record that a client is authorized.
+     * @param clientAddress
+     * @param principal
+     */
+    void clientAuthorized(InetSocketAddress clientAddress, UserPrincipal principal);
+    
+    /**
+     * Record that a client authorization failed.
+     * @param clientAddress
+     */
+    void clientAuthorizationFailed(InetSocketAddress clientAddress);
+    
+    /**
      * Record that a client disconnected.
      * 
      * @param clientAddress

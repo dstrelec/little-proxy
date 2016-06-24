@@ -143,9 +143,6 @@ public interface HttpProxyServerBootstrap {
      */
     HttpProxyServerBootstrap withProxyAuthenticator(
             ProxyAuthenticator proxyAuthenticator);
-
-    HttpProxyServerBootstrap withProxyValve(
-    		ProxyValve proxyValve);
     
     /**
      * <p>
