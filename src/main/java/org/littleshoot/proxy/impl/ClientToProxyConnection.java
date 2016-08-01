@@ -1364,19 +1364,12 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
                 hostAndPort = hosts.get(0);
             }
         }
-        
-        if (StringUtils.isNotBlank(hostAndPort)) {
-        	String route = httpRequest.headers().get(HttpProxyHeaders.PROXY_ROUTE);
-        	if (StringUtils.isNotBlank(route)) {
-        		hostAndPort = hostAndPort + ":" + route;
-        	}
-        }
 
         return hostAndPort;
     }
     
     /**
-     * Identify the host and port for a request.
+     * Identify the routig key for a request.
      * 
      * @param httpRequest
      * @return
