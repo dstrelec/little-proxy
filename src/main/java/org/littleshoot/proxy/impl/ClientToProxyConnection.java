@@ -1375,7 +1375,7 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
      * @return
      */
     private String identifyRouting(String hostAndPort, HttpRequest httpRequest) {
-        if (StringUtils.isBlank(hostAndPort)) {
+        if (StringUtils.isNotBlank(hostAndPort)) {
         	String route = httpRequest.headers().get(HttpProxyHeaders.PROXY_ROUTE);
         	if (StringUtils.isNotBlank(route)) {
         		hostAndPort = hostAndPort + ":" + route;
