@@ -335,10 +335,11 @@ public abstract class AbstractProxyTest {
         return DefaultHttpProxyServer.bootstrap().plusActivityTracker(
                 new ActivityTracker() {
                     @Override
-                    public void bytesReceivedFromClient(
+                    public boolean bytesReceivedFromClient(
                             FlowContext flowContext,
                             int numberOfBytes) {
                         bytesReceivedFromClient.addAndGet(numberOfBytes);
+                        return false;
                     }
 
                     @Override
@@ -349,9 +350,10 @@ public abstract class AbstractProxyTest {
                     }
 
                     @Override
-                    public void bytesSentToServer(FullFlowContext flowContext,
+                    public boolean bytesSentToServer(FullFlowContext flowContext,
                             int numberOfBytes) {
                         bytesSentToServer.addAndGet(numberOfBytes);
+                        return false;
                     }
 
                     @Override
@@ -362,10 +364,11 @@ public abstract class AbstractProxyTest {
                     }
 
                     @Override
-                    public void bytesReceivedFromServer(
+                    public boolean bytesReceivedFromServer(
                             FullFlowContext flowContext,
                             int numberOfBytes) {
                         bytesReceivedFromServer.addAndGet(numberOfBytes);
+                        return false;
                     }
 
                     @Override
@@ -376,9 +379,10 @@ public abstract class AbstractProxyTest {
                     }
 
                     @Override
-                    public void bytesSentToClient(FlowContext flowContext,
+                    public boolean bytesSentToClient(FlowContext flowContext,
                             int numberOfBytes) {
                         bytesSentToClient.addAndGet(numberOfBytes);
+                        return false;
                     }
 
                     @Override

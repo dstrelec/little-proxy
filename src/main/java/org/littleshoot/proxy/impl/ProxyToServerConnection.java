@@ -77,6 +77,7 @@ public class ProxyToServerConnection extends ProxyConnection<HttpResponse> {
     private volatile TransportProtocol transportProtocol;
     private volatile InetSocketAddress remoteAddress;
     private volatile InetSocketAddress localAddress;
+    private final String routingKey;
     private final String serverHostAndPort;
     private volatile ChainedProxy chainedProxy;
     private final Queue<ChainedProxy> availableChainedProxies;
@@ -153,6 +154,7 @@ public class ProxyToServerConnection extends ProxyConnection<HttpResponse> {
      */
     static ProxyToServerConnection create(DefaultHttpProxyServer proxyServer,
             ClientToProxyConnection clientConnection,
+            String routingKey,
             String serverHostAndPort,
             HttpFilters initialFilters,
             HttpRequest initialHttpRequest,
@@ -171,6 +173,7 @@ public class ProxyToServerConnection extends ProxyConnection<HttpResponse> {
         }
         return new ProxyToServerConnection(proxyServer,
                 clientConnection,
+                routingKey,
                 serverHostAndPort,
                 chainedProxies.poll(),
                 chainedProxies,
@@ -181,6 +184,7 @@ public class ProxyToServerConnection extends ProxyConnection<HttpResponse> {
     private ProxyToServerConnection(
             DefaultHttpProxyServer proxyServer,
             ClientToProxyConnection clientConnection,
+            String routingKey,
             String serverHostAndPort,
             ChainedProxy chainedProxy,
             Queue<ChainedProxy> availableChainedProxies,
@@ -189,6 +193,7 @@ public class ProxyToServerConnection extends ProxyConnection<HttpResponse> {
             throws UnknownHostException {
         super(DISCONNECTED, proxyServer, true);
         this.clientConnection = clientConnection;
+        this.routingKey = routingKey;
         this.serverHostAndPort = serverHostAndPort;
         this.chainedProxy = chainedProxy;
         this.availableChainedProxies = availableChainedProxies;
@@ -459,8 +464,8 @@ public class ProxyToServerConnection extends ProxyConnection<HttpResponse> {
         return remoteAddress;
     }
 
-    public String getServerHostAndPort() {
-        return serverHostAndPort;
+    public String getRoutingKey() {
+        return routingKey;
     }
 
     public boolean hasUpstreamChainedProxy() {
@@ -970,13 +975,15 @@ public class ProxyToServerConnection extends ProxyConnection<HttpResponse> {
      **************************************************************************/
     private final BytesReadMonitor bytesReadMonitor = new BytesReadMonitor() {
         @Override
-        protected void bytesRead(int numberOfBytes) {
-            FullFlowContext flowContext = new FullFlowContext(clientConnection,
-                    ProxyToServerConnection.this);
-            for (ActivityTracker tracker : proxyServer
-                    .getActivityTrackers()) {
-                tracker.bytesReceivedFromServer(flowContext, numberOfBytes);
+        protected boolean bytesRead(int numberOfBytes) {
+            FullFlowContext flowContext = new FullFlowContext(clientConnection, ProxyToServerConnection.this);
+            for (ActivityTracker tracker : proxyServer.getActivityTrackers()) {
+            	if (tracker.bytesReceivedFromServer(flowContext, numberOfBytes)) {
+            		return true;
+            	}
             }
+            
+            return false;
         }
     };
 
@@ -994,13 +1001,15 @@ public class ProxyToServerConnection extends ProxyConnection<HttpResponse> {
 
     private BytesWrittenMonitor bytesWrittenMonitor = new BytesWrittenMonitor() {
         @Override
-        protected void bytesWritten(int numberOfBytes) {
-            FullFlowContext flowContext = new FullFlowContext(clientConnection,
-                    ProxyToServerConnection.this);
-            for (ActivityTracker tracker : proxyServer
-                    .getActivityTrackers()) {
-                tracker.bytesSentToServer(flowContext, numberOfBytes);
+        protected boolean bytesWritten(int numberOfBytes) {
+            FullFlowContext flowContext = new FullFlowContext(clientConnection, ProxyToServerConnection.this);
+            for (ActivityTracker tracker : proxyServer.getActivityTrackers()) {
+            	if (tracker.bytesSentToServer(flowContext, numberOfBytes)) {
+            		return true;
+            	}
             }
+            
+            return false;
         }
     };
 

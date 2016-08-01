@@ -64,7 +64,7 @@ public interface ActivityTracker {
      *            {@link FullFlowContext}.
      * @param numberOfBytes
      */
-    void bytesReceivedFromClient(FlowContext flowContext,
+    boolean bytesReceivedFromClient(FlowContext flowContext,
             int numberOfBytes);
 
     /**
@@ -92,7 +92,7 @@ public interface ActivityTracker {
      *            provides contextual information about the flow
      * @param numberOfBytes
      */
-    void bytesSentToServer(FullFlowContext flowContext, int numberOfBytes);
+    boolean bytesSentToServer(FullFlowContext flowContext, int numberOfBytes);
 
     /**
      * <p>
@@ -118,7 +118,7 @@ public interface ActivityTracker {
      *            provides contextual information about the flow
      * @param numberOfBytes
      */
-    void bytesReceivedFromServer(FullFlowContext flowContext, int numberOfBytes);
+    boolean bytesReceivedFromServer(FullFlowContext flowContext, int numberOfBytes);
 
     /**
      * <p>
@@ -145,7 +145,7 @@ public interface ActivityTracker {
      *            {@link FullFlowContext}.
      * @param numberOfBytes
      */
-    void bytesSentToClient(FlowContext flowContext, int numberOfBytes);
+    boolean bytesSentToClient(FlowContext flowContext, int numberOfBytes);
 
     /**
      * <p>

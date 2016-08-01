@@ -29,6 +29,7 @@ import org.littleshoot.proxy.FlowContext;
 import org.littleshoot.proxy.FullFlowContext;
 import org.littleshoot.proxy.HttpFilters;
 import org.littleshoot.proxy.HttpFiltersAdapter;
+import org.littleshoot.proxy.HttpProxyHeaders;
 import org.littleshoot.proxy.ProxyAuthenticator;
 import org.littleshoot.proxy.SslEngineSource;
 import org.littleshoot.proxy.UserPrincipal;
@@ -92,9 +93,9 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
     private static final Pattern HTTP_SCHEME = Pattern.compile("^http://.*", Pattern.CASE_INSENSITIVE);
 
     /**
-     * Keep track of all ProxyToServerConnections by host+port.
+     * Keep track of all ProxyToServerConnections by host+port+route.
      */
-    private final Map<String, ProxyToServerConnection> serverConnectionsByHostAndPort = new ConcurrentHashMap<String, ProxyToServerConnection>();
+    private final Map<String, ProxyToServerConnection> serverConnectionsByRoute = new ConcurrentHashMap<String, ProxyToServerConnection>();
 
     /**
      * Keep track of how many servers are currently in the process of
@@ -253,10 +254,11 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
 
         // Identify our server and chained proxy
         String serverHostAndPort = identifyHostAndPort(httpRequest);
+        String routingKey = identifyRouting(serverHostAndPort, httpRequest);
 
         LOG.debug("Ensuring that hostAndPort are available in {}",
                 httpRequest.getUri());
-        if (serverHostAndPort == null || StringUtils.isBlank(serverHostAndPort)) {
+        if (routingKey == null || StringUtils.isBlank(routingKey)) {
             LOG.warn("No host and port found in {}", httpRequest.getUri());
             boolean keepAlive = writeBadGateway(httpRequest);
             if (keepAlive) {
@@ -266,20 +268,20 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
             }
         }
 
-        LOG.debug("Finding ProxyToServerConnection for: {}", serverHostAndPort);
+        LOG.debug("Finding ProxyToServerConnection for: {}", routingKey);
         currentServerConnection = isMitming() || isTunneling() ?
                 this.currentServerConnection
-                : this.serverConnectionsByHostAndPort.get(serverHostAndPort);
+                : this.serverConnectionsByRoute.get(routingKey);
 
         boolean newConnectionRequired = false;
         if (ProxyUtils.isCONNECT(httpRequest)) {
             LOG.debug(
                     "Not reusing existing ProxyToServerConnection because request is a CONNECT for: {}",
-                    serverHostAndPort);
+                    routingKey);
             newConnectionRequired = true;
         } else if (currentServerConnection == null) {
             LOG.debug("Didn't find existing ProxyToServerConnection for: {}",
-                    serverHostAndPort);
+            		routingKey);
             newConnectionRequired = true;
         }
 
@@ -288,6 +290,7 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
                 currentServerConnection = ProxyToServerConnection.create(
                         proxyServer,
                         this,
+                        routingKey,
                         serverHostAndPort,
                         currentFilters,
                         httpRequest,
@@ -303,7 +306,7 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
                     }
                 }
                 // Remember the connection for later
-                serverConnectionsByHostAndPort.put(serverHostAndPort,
+                serverConnectionsByRoute.put(routingKey,
                         currentServerConnection);
             } catch (UnknownHostException uhe) {
                 LOG.info("Bad Host {}", httpRequest.getUri());
@@ -527,7 +530,7 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
     @Override
     protected void disconnected() {
         super.disconnected();
-        for (ProxyToServerConnection serverConnection : serverConnectionsByHostAndPort
+        for (ProxyToServerConnection serverConnection : serverConnectionsByRoute
                 .values()) {
             serverConnection.disconnect();
         }
@@ -617,7 +620,7 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
         // the connection to the server failed, so disconnect the server and remove the ProxyToServerConnection from the
         // map of open server connections
         serverConnection.disconnect();
-        this.serverConnectionsByHostAndPort.remove(serverConnection.getServerHostAndPort());
+        this.serverConnectionsByRoute.remove(serverConnection.getRoutingKey());
 
         boolean keepAlive = writeBadGateway(initialRequest);
         if (keepAlive) {
@@ -663,7 +666,7 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
     @Override
     synchronized protected void becameSaturated() {
         super.becameSaturated();
-        for (ProxyToServerConnection serverConnection : serverConnectionsByHostAndPort
+        for (ProxyToServerConnection serverConnection : serverConnectionsByRoute
                 .values()) {
             synchronized (serverConnection) {
                 if (this.isSaturated()) {
@@ -680,7 +683,7 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
     @Override
     synchronized protected void becameWritable() {
         super.becameWritable();
-        for (ProxyToServerConnection serverConnection : serverConnectionsByHostAndPort
+        for (ProxyToServerConnection serverConnection : serverConnectionsByRoute
                 .values()) {
             synchronized (serverConnection) {
                 if (!this.isSaturated()) {
@@ -712,7 +715,7 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
     synchronized protected void serverBecameWriteable(
             ProxyToServerConnection serverConnection) {
         boolean anyServersSaturated = false;
-        for (ProxyToServerConnection otherServerConnection : serverConnectionsByHostAndPort
+        for (ProxyToServerConnection otherServerConnection : serverConnectionsByRoute
                 .values()) {
             if (otherServerConnection.isSaturated()) {
                 anyServersSaturated = true;
@@ -1361,9 +1364,34 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
                 hostAndPort = hosts.get(0);
             }
         }
+        
+        if (StringUtils.isNotBlank(hostAndPort)) {
+        	String route = httpRequest.headers().get(HttpProxyHeaders.PROXY_ROUTE);
+        	if (StringUtils.isNotBlank(route)) {
+        		hostAndPort = hostAndPort + ":" + route;
+        	}
+        }
 
         return hostAndPort;
     }
+    
+    /**
+     * Identify the host and port for a request.
+     * 
+     * @param httpRequest
+     * @return
+     */
+    private String identifyRouting(String hostAndPort, HttpRequest httpRequest) {
+        if (StringUtils.isBlank(hostAndPort)) {
+        	String route = httpRequest.headers().get(HttpProxyHeaders.PROXY_ROUTE);
+        	if (StringUtils.isNotBlank(route)) {
+        		hostAndPort = hostAndPort + ":" + route;
+        	}
+        }
+
+        return hostAndPort;
+    }
+
 
     /**
      * Write an empty buffer at the end of a chunked transfer. We need to do
@@ -1400,12 +1428,15 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
      **************************************************************************/
     private final BytesReadMonitor bytesReadMonitor = new BytesReadMonitor() {
         @Override
-        protected void bytesRead(int numberOfBytes) {
+        protected boolean bytesRead(int numberOfBytes) {
             FlowContext flowContext = flowContext();
-            for (ActivityTracker tracker : proxyServer
-                    .getActivityTrackers()) {
-                tracker.bytesReceivedFromClient(flowContext, numberOfBytes);
+            for (ActivityTracker tracker : proxyServer.getActivityTrackers()) {
+            	if (tracker.bytesReceivedFromClient(flowContext, numberOfBytes)) {
+            		return true;
+            	}
             }
+            
+            return false;
         }
     };
 
@@ -1422,12 +1453,15 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
 
     private BytesWrittenMonitor bytesWrittenMonitor = new BytesWrittenMonitor() {
         @Override
-        protected void bytesWritten(int numberOfBytes) {
+        protected boolean bytesWritten(int numberOfBytes) {
             FlowContext flowContext = flowContext();
-            for (ActivityTracker tracker : proxyServer
-                    .getActivityTrackers()) {
-                tracker.bytesSentToClient(flowContext, numberOfBytes);
+            for (ActivityTracker tracker : proxyServer.getActivityTrackers()) {
+            	if (tracker.bytesSentToClient(flowContext, numberOfBytes)) {
+            		return true;
+            	}
             }
+            
+            return false;
         }
     };
 

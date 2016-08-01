@@ -14,8 +14,8 @@ import javax.net.ssl.SSLSession;
 public class ActivityTrackerAdapter implements ActivityTracker {
 
     @Override
-    public void bytesReceivedFromClient(FlowContext flowContext,
-            int numberOfBytes) {
+    public boolean bytesReceivedFromClient(FlowContext flowContext, int numberOfBytes) {
+    	return false;
     }
 
     @Override
@@ -24,7 +24,8 @@ public class ActivityTrackerAdapter implements ActivityTracker {
     }
 
     @Override
-    public void bytesSentToServer(FullFlowContext flowContext, int numberOfBytes) {
+    public boolean bytesSentToServer(FullFlowContext flowContext, int numberOfBytes) {
+    	return false;
     }
 
     @Override
@@ -33,23 +34,21 @@ public class ActivityTrackerAdapter implements ActivityTracker {
     }
 
     @Override
-    public void bytesReceivedFromServer(FullFlowContext flowContext,
-            int numberOfBytes) {
+    public boolean bytesReceivedFromServer(FullFlowContext flowContext, int numberOfBytes) {
+    	return false;
     }
 
     @Override
-    public void responseReceivedFromServer(FullFlowContext flowContext,
-            HttpResponse httpResponse) {
+    public void responseReceivedFromServer(FullFlowContext flowContext, HttpResponse httpResponse) {
     }
 
     @Override
-    public void bytesSentToClient(FlowContext flowContext,
-            int numberOfBytes) {
+    public boolean bytesSentToClient(FlowContext flowContext, int numberOfBytes) {
+    	return false;
     }
 
     @Override
-    public void responseSentToClient(FlowContext flowContext,
-            HttpResponse httpResponse) {
+    public void responseSentToClient(FlowContext flowContext, HttpResponse httpResponse) {
     }
 
     @Override
@@ -62,20 +61,15 @@ public class ActivityTrackerAdapter implements ActivityTracker {
     }
 
     @Override
-    public void clientDisconnected(InetSocketAddress clientAddress,
-            SSLSession sslSession) {
+    public void clientDisconnected(InetSocketAddress clientAddress, SSLSession sslSession) {
     }
 
 	@Override
 	public void clientAuthorized(InetSocketAddress clientAddress, UserPrincipal principal) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void clientAuthorizationFailed(InetSocketAddress clientAddress) {
-		// TODO Auto-generated method stub
-		
 	}
 
 }

@@ -684,7 +684,9 @@ abstract class ProxyConnection<I extends HttpObject> extends
                 throws Exception {
             try {
                 if (msg instanceof ByteBuf) {
-                    bytesRead(((ByteBuf) msg).readableBytes());
+                    if (bytesRead(((ByteBuf) msg).readableBytes())) {
+                    	ctx.close();
+                    }
                 }
             } catch (Throwable t) {
                 LOG.warn("Unable to record bytesRead", t);
@@ -693,7 +695,7 @@ abstract class ProxyConnection<I extends HttpObject> extends
             }
         }
 
-        protected abstract void bytesRead(int numberOfBytes);
+        protected abstract boolean bytesRead(int numberOfBytes);
     }
 
     /**
@@ -754,7 +756,9 @@ abstract class ProxyConnection<I extends HttpObject> extends
                 throws Exception {
             try {
                 if (msg instanceof ByteBuf) {
-                    bytesWritten(((ByteBuf) msg).readableBytes());
+                    if (bytesWritten(((ByteBuf) msg).readableBytes())) {
+                    	ctx.close();
+                    }
                 }
             } catch (Throwable t) {
                 LOG.warn("Unable to record bytesRead", t);
@@ -763,7 +767,7 @@ abstract class ProxyConnection<I extends HttpObject> extends
             }
         }
 
-        protected abstract void bytesWritten(int numberOfBytes);
+        protected abstract boolean bytesWritten(int numberOfBytes);
     }
 
     /**
