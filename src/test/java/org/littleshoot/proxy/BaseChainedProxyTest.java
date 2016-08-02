@@ -73,6 +73,11 @@ public abstract class BaseChainedProxyTest extends BaseProxyTest {
                     Queue<ChainedProxy> chainedProxies) {
                 chainedProxies.add(newChainedProxy());
             }
+
+			@Override
+			public String obtainChainIdentifier(UserPrincipal principal, HttpRequest httpRequest) {
+				return null;
+			}
         };
     }
 

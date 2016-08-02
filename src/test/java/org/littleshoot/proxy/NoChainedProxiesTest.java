@@ -20,6 +20,11 @@ public class NoChainedProxiesTest extends AbstractProxyTest {
                             Queue<ChainedProxy> chainedProxies) {
                         // Leave list empty
                     }
+
+					@Override
+					public String obtainChainIdentifier(UserPrincipal principal, HttpRequest httpRequest) {
+						return null;
+					}
                 })
                 .withIdleConnectionTimeout(1)
                 .start();

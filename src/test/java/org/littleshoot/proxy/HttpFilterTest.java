@@ -561,6 +561,11 @@ public class HttpFilterTest {
                             }
                         });
                     }
+
+					@Override
+					public String obtainChainIdentifier(UserPrincipal principal, HttpRequest httpRequest) {
+						return null;
+					}
                 })
                 .start();
 
@@ -639,6 +644,11 @@ public class HttpFilterTest {
                             }
                         });
                     }
+
+					@Override
+					public String obtainChainIdentifier(UserPrincipal principal, HttpRequest httpRequest) {
+						return null;
+					}
                 })
                 .start();
 

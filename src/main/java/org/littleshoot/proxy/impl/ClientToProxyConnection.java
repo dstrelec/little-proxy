@@ -25,11 +25,11 @@ import io.netty.util.concurrent.GenericFutureListener;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.littleshoot.proxy.ActivityTracker;
+import org.littleshoot.proxy.ChainedProxyManager;
 import org.littleshoot.proxy.FlowContext;
 import org.littleshoot.proxy.FullFlowContext;
 import org.littleshoot.proxy.HttpFilters;
 import org.littleshoot.proxy.HttpFiltersAdapter;
-import org.littleshoot.proxy.HttpProxyHeaders;
 import org.littleshoot.proxy.ProxyAuthenticator;
 import org.littleshoot.proxy.SslEngineSource;
 import org.littleshoot.proxy.UserPrincipal;
@@ -254,7 +254,16 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
 
         // Identify our server and chained proxy
         String serverHostAndPort = identifyHostAndPort(httpRequest);
-        String routingKey = identifyRouting(serverHostAndPort, httpRequest);
+        
+        
+        String routingKey = serverHostAndPort;
+        ChainedProxyManager chainedProxyManager = proxyServer.getChainProxyManager();
+        if (chainedProxyManager != null) {
+        	String chainId = chainedProxyManager.obtainChainIdentifier(principal, httpRequest);
+        	if (StringUtils.isNotEmpty(chainId)) {
+        		routingKey = routingKey + ":" + chainId;
+        	}
+        }
 
         LOG.debug("Ensuring that hostAndPort are available in {}",
                 httpRequest.getUri());
@@ -1363,23 +1372,6 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
             if (hosts != null && !hosts.isEmpty()) {
                 hostAndPort = hosts.get(0);
             }
-        }
-
-        return hostAndPort;
-    }
-    
-    /**
-     * Identify the routig key for a request.
-     * 
-     * @param httpRequest
-     * @return
-     */
-    private String identifyRouting(String hostAndPort, HttpRequest httpRequest) {
-        if (StringUtils.isNotBlank(hostAndPort)) {
-        	String route = httpRequest.headers().get(HttpProxyHeaders.PROXY_ROUTE);
-        	if (StringUtils.isNotBlank(route)) {
-        		hostAndPort = hostAndPort + ":" + route;
-        	}
         }
 
         return hostAndPort;

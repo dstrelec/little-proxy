@@ -11,6 +11,8 @@ import java.util.Queue;
  */
 public interface ChainedProxyManager {
 
+	String obtainChainIdentifier(UserPrincipal principal, HttpRequest httpRequest);
+	
     /**
      * <p>
      * Based on the given httpRequest, add any {@link ChainedProxy}s to the list
@@ -35,4 +37,5 @@ public interface ChainedProxyManager {
      */
     void lookupChainedProxies(UserPrincipal principal, HttpRequest httpRequest,
             Queue<ChainedProxy> chainedProxies);
+    
 }

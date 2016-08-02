@@ -33,6 +33,12 @@ public class ChainedProxyWithFallbackToDirectDueToSSLTest extends
                 chainedProxies
                         .add(ChainedProxyAdapter.FALLBACK_TO_DIRECT_CONNECTION);
             }
+
+			@Override
+			public String obtainChainIdentifier(UserPrincipal principal, HttpRequest httpRequest) {
+				// TODO Auto-generated method stub
+				return null;
+			}
         };
     }
 }

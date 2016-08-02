@@ -43,6 +43,12 @@ public class ChainedProxyWithFallbackToOtherChainedProxyDueToSSLTest extends
                     }
                 });
             }
+
+			@Override
+			public String obtainChainIdentifier(UserPrincipal principal, HttpRequest httpRequest) {
+				// TODO Auto-generated method stub
+				return null;
+			}
         };
     }
 }
