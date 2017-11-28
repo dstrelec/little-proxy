@@ -161,7 +161,6 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
                     authenticateClients)
                     .addListener(
                             new GenericFutureListener<Future<? super Channel>>() {
-                                @Override
                                 public void operationComplete(
                                         Future<? super Channel> future)
                                         throws Exception {
@@ -1464,10 +1463,8 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
 
     private void recordClientConnected() {
         try {
-            InetSocketAddress clientAddress = getClientAddress();
-            for (ActivityTracker tracker : proxyServer
-                    .getActivityTrackers()) {
-                tracker.clientConnected(clientAddress);
+            for (ActivityTracker tracker : proxyServer.getActivityTrackers()) {
+                tracker.clientConnected(channel);
             }
         } catch (Exception e) {
             LOG.error("Unable to recordClientConnected", e);
@@ -1479,8 +1476,7 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
             InetSocketAddress clientAddress = getClientAddress();
             for (ActivityTracker tracker : proxyServer
                     .getActivityTrackers()) {
-                tracker.clientSSLHandshakeSucceeded(
-                        clientAddress, clientSslSession);
+                tracker.clientSSLHandshakeSucceeded(channel, clientSslSession);
             }
         } catch (Exception e) {
             LOG.error("Unable to recorClientSSLHandshakeSucceeded", e);
@@ -1489,9 +1485,8 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
     
     private void recordClientAuthorized() {
         try {
-            InetSocketAddress clientAddress = getClientAddress();
             for (ActivityTracker tracker : proxyServer.getActivityTrackers()) {
-                tracker.clientAuthorized(clientAddress, principal);
+                tracker.clientAuthorized(channel, principal);
             }
         } catch (Exception e) {
             LOG.error("Unable to recordClientAuthorized", e);
@@ -1500,9 +1495,8 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
     
     private void recordClientAuthorizationFailed() {
         try {
-            InetSocketAddress clientAddress = getClientAddress();
             for (ActivityTracker tracker : proxyServer.getActivityTrackers()) {
-                tracker.clientAuthorizationFailed(clientAddress);
+                tracker.clientAuthorizationFailed(channel);
             }
         } catch (Exception e) {
             LOG.error("Unable to recordClientAuthorized", e);
@@ -1511,11 +1505,9 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
 
     private void recordClientDisconnected() {
         try {
-            InetSocketAddress clientAddress = getClientAddress();
             for (ActivityTracker tracker : proxyServer
                     .getActivityTrackers()) {
-                tracker.clientDisconnected(
-                        clientAddress, clientSslSession);
+                tracker.clientDisconnected(channel, clientSslSession);
             }
         } catch (Exception e) {
             LOG.error("Unable to recordClientDisconnected", e);

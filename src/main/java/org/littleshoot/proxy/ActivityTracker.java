@@ -1,10 +1,10 @@
 package org.littleshoot.proxy;
 
+import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 
 import javax.net.ssl.SSLSession;
-import java.net.InetSocketAddress;
 
 /**
  * <p>
@@ -21,40 +21,38 @@ public interface ActivityTracker {
     /**
      * Record that a client connected.
      * 
-     * @param clientAddress
+     * @param channel
      */
-    void clientConnected(InetSocketAddress clientAddress);
+    void clientConnected(Channel channel);
 
     /**
      * Record that a client's SSL handshake completed.
      * 
-     * @param clientAddress
+     * @param channel
      * @param sslSession
      */
-    void clientSSLHandshakeSucceeded(InetSocketAddress clientAddress,
-            SSLSession sslSession);
+    void clientSSLHandshakeSucceeded(Channel channel, SSLSession sslSession);
 
     /**
      * Record that a client is authorized.
-     * @param clientAddress
+     * @param channel
      * @param principal
      */
-    void clientAuthorized(InetSocketAddress clientAddress, UserPrincipal principal);
+    void clientAuthorized(Channel channel, UserPrincipal principal);
     
     /**
      * Record that a client authorization failed.
-     * @param clientAddress
+     * @param channel
      */
-    void clientAuthorizationFailed(InetSocketAddress clientAddress);
+    void clientAuthorizationFailed(Channel channel);
     
     /**
      * Record that a client disconnected.
      * 
-     * @param clientAddress
+     * @param channel
      * @param sslSession
      */
-    void clientDisconnected(InetSocketAddress clientAddress,
-            SSLSession sslSession);
+    void clientDisconnected(Channel channel, SSLSession sslSession);
 
     /**
      * Record that the proxy received bytes from the client.

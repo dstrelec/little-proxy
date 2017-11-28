@@ -1,9 +1,8 @@
 package org.littleshoot.proxy;
 
+import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
-
-import java.net.InetSocketAddress;
 
 import javax.net.ssl.SSLSession;
 
@@ -13,63 +12,49 @@ import javax.net.ssl.SSLSession;
  */
 public class ActivityTrackerAdapter implements ActivityTracker {
 
-    @Override
     public boolean bytesReceivedFromClient(FlowContext flowContext, int numberOfBytes) {
     	return false;
     }
 
-    @Override
     public void requestReceivedFromClient(FlowContext flowContext,
             HttpRequest httpRequest) {
     }
 
-    @Override
     public boolean bytesSentToServer(FullFlowContext flowContext, int numberOfBytes) {
     	return false;
     }
 
-    @Override
     public void requestSentToServer(FullFlowContext flowContext,
             HttpRequest httpRequest) {
     }
 
-    @Override
     public boolean bytesReceivedFromServer(FullFlowContext flowContext, int numberOfBytes) {
     	return false;
     }
 
-    @Override
     public void responseReceivedFromServer(FullFlowContext flowContext, HttpResponse httpResponse) {
     }
 
-    @Override
     public boolean bytesSentToClient(FlowContext flowContext, int numberOfBytes) {
     	return false;
     }
 
-    @Override
     public void responseSentToClient(FlowContext flowContext, HttpResponse httpResponse) {
     }
 
-    @Override
-    public void clientConnected(InetSocketAddress clientAddress) {
+    public void clientConnected(Channel channel) {
     }
 
-    @Override
-    public void clientSSLHandshakeSucceeded(InetSocketAddress clientAddress,
-            SSLSession sslSession) {
+    public void clientSSLHandshakeSucceeded(Channel channel, SSLSession sslSession) {
     }
 
-    @Override
-    public void clientDisconnected(InetSocketAddress clientAddress, SSLSession sslSession) {
+    public void clientDisconnected(Channel channel, SSLSession sslSession) {
     }
 
-	@Override
-	public void clientAuthorized(InetSocketAddress clientAddress, UserPrincipal principal) {
+	public void clientAuthorized(Channel channel, UserPrincipal principal) {
 	}
 
-	@Override
-	public void clientAuthorizationFailed(InetSocketAddress clientAddress) {
+	public void clientAuthorizationFailed(Channel channel) {
 	}
 
 }

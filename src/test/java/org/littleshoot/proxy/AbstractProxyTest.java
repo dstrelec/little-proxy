@@ -1,5 +1,6 @@
 package org.littleshoot.proxy;
 
+import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpRequest;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -334,92 +335,63 @@ public abstract class AbstractProxyTest {
     protected HttpProxyServerBootstrap bootstrapProxy() {
         return DefaultHttpProxyServer.bootstrap().plusActivityTracker(
                 new ActivityTracker() {
-                    @Override
-                    public boolean bytesReceivedFromClient(
-                            FlowContext flowContext,
-                            int numberOfBytes) {
+
+                    public boolean bytesReceivedFromClient(FlowContext flowContext, int numberOfBytes) {
                         bytesReceivedFromClient.addAndGet(numberOfBytes);
                         return false;
                     }
 
-                    @Override
-                    public void requestReceivedFromClient(
-                            FlowContext flowContext,
-                            HttpRequest httpRequest) {
+                    public void requestReceivedFromClient(FlowContext flowContext, HttpRequest httpRequest) {
                         requestsReceivedFromClient.incrementAndGet();
                     }
 
-                    @Override
-                    public boolean bytesSentToServer(FullFlowContext flowContext,
-                            int numberOfBytes) {
+                    public boolean bytesSentToServer(FullFlowContext flowContext, int numberOfBytes) {
                         bytesSentToServer.addAndGet(numberOfBytes);
                         return false;
                     }
 
-                    @Override
-                    public void requestSentToServer(
-                            FullFlowContext flowContext,
-                            HttpRequest httpRequest) {
+                    public void requestSentToServer(FullFlowContext flowContext, HttpRequest httpRequest) {
                         requestsSentToServer.incrementAndGet();
                     }
 
-                    @Override
-                    public boolean bytesReceivedFromServer(
-                            FullFlowContext flowContext,
-                            int numberOfBytes) {
+                    public boolean bytesReceivedFromServer(FullFlowContext flowContext, int numberOfBytes) {
                         bytesReceivedFromServer.addAndGet(numberOfBytes);
                         return false;
                     }
 
-                    @Override
-                    public void responseReceivedFromServer(
-                            FullFlowContext flowContext,
-                            io.netty.handler.codec.http.HttpResponse httpResponse) {
+                    public void responseReceivedFromServer(FullFlowContext flowContext,
+                                                           io.netty.handler.codec.http.HttpResponse httpResponse) {
                         responsesReceivedFromServer.incrementAndGet();
                     }
 
-                    @Override
-                    public boolean bytesSentToClient(FlowContext flowContext,
-                            int numberOfBytes) {
+                    public boolean bytesSentToClient(FlowContext flowContext, int numberOfBytes) {
                         bytesSentToClient.addAndGet(numberOfBytes);
                         return false;
                     }
 
-                    @Override
-                    public void responseSentToClient(
-                            FlowContext flowContext,
-                            io.netty.handler.codec.http.HttpResponse httpResponse) {
+                    public void responseSentToClient(FlowContext flowContext,
+                                                     io.netty.handler.codec.http.HttpResponse httpResponse) {
                         responsesSentToClient.incrementAndGet();
                     }
 
-                    @Override
-                    public void clientConnected(InetSocketAddress clientAddress) {
+                    public void clientConnected(Channel channel) {
                         clientConnects.incrementAndGet();
                     }
 
-                    @Override
-                    public void clientSSLHandshakeSucceeded(
-                            InetSocketAddress clientAddress,
-                            SSLSession sslSession) {
+                    public void clientSSLHandshakeSucceeded(Channel channel, SSLSession sslSession) {
                         clientSSLHandshakeSuccesses.incrementAndGet();
                     }
 
-                    @Override
-                    public void clientDisconnected(
-                            InetSocketAddress clientAddress,
-                            SSLSession sslSession) {
+                    public void clientDisconnected(Channel channel, SSLSession sslSession) {
                         clientDisconnects.incrementAndGet();
                     }
 
-					@Override
-					public void clientAuthorized(InetSocketAddress clientAddress, UserPrincipal principal) {
-						// TODO Auto-generated method stub
-						
+					public void clientAuthorized(Channel channel, UserPrincipal principal) {
+						//
 					}
 
-					@Override
-					public void clientAuthorizationFailed(InetSocketAddress clientAddress) {
-						// TODO Auto-generated method stub
+					public void clientAuthorizationFailed(Channel channel) {
+						//
 						
 					}
                 });
